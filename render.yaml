@@ -19,6 +19,8 @@ services:
           type: redis
           name: ai-interview-redis
           property: connectionString
+      - key: PYTHON_VERSION
+        value: "3.12.8"
       - key: DEBUG
         value: "false"
       - key: JWT_SECRET_KEY
