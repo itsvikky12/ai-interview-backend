@@ -62,6 +62,14 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _check_security(self) -> "Settings":
+        if self.DATABASE_URL.startswith("postgres://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif self.DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in self.DATABASE_URL:
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        if self.DATABASE_SYNC_URL.startswith("postgres://"):
+            self.DATABASE_SYNC_URL = self.DATABASE_SYNC_URL.replace("postgres://", "postgresql://", 1)
+
         if not self.DEBUG and self.JWT_SECRET_KEY == _INSECURE_DEFAULT_KEY:
             raise ValueError(
                 "JWT_SECRET_KEY must be set to a secure value in production. "
