@@ -145,6 +145,17 @@ async def get_interview_coding_problem(
     current_user: User = Depends(get_current_user)
 ):
     """Dynamically assign or fetch the coding problem for an ongoing interview."""
+    from app.models.interview import Interview
+    from app.models.user import UserRole
+
+    # Verify interview ownership
+    iv_res = await db.execute(select(Interview).where(Interview.id == interview_id))
+    interview = iv_res.scalar_one_or_none()
+    if not interview:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found")
+    if current_user.role != UserRole.ADMIN and interview.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
     await seed_coding_problems(db)
     service = CodingService(db)
 

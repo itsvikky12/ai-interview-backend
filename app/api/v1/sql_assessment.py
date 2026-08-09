@@ -179,6 +179,16 @@ async def submit_sql_query(
     if not problem:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SQL problem not found")
 
+    if req.interview_id:
+        from app.models.interview import Interview
+        from app.models.user import UserRole
+        iv_res = await db.execute(select(Interview).where(Interview.id == req.interview_id))
+        interview = iv_res.scalar_one_or_none()
+        if not interview:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Associated interview not found")
+        if current_user.role != UserRole.ADMIN and interview.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
     # Fetch all 3 test cases
     tc_res = await db.execute(
         select(SqlTestCase)
